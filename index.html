@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Калкулатор Застраховка</title>
+  <style>
+    :root{
+      --bg:#f3f3f3;
+      --card:#ffffff;
+      --text:#111111;
+      --muted:#6b7280;
+      --line:#d7d7d7;
+      --accent:#000000;
+      --warn-bg:#fff7e6;
+      --warn-border:#f2cf85;
+      --warn-text:#7a5300;
+      --radius-card:30px;
+      --radius-field:20px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body{
+      margin:0;
+      padding:16px;
+      background:var(--bg);
+      color:var(--text);
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .wrap{
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    .intro{
+      margin:0 0 14px 4px;
+      font-size:15px;
+      color:#333;
+    }
+
+    .card{
+      background:var(--card);
+      border:1px solid #e6e6e6;
+      border-radius:var(--radius-card);
+      padding:20px;
+    }
+
+    h1{
+      margin:0 0 18px;
+      font-size:30px;
+      line-height:1.1;
+      font-weight:800;
+    }
+
+    .field{
+      margin-bottom:16px;
+    }
+
+    .label{
+      display:block;
+      margin-bottom:10px;
+      font-size:17px;
+      font-weight:800;
+    }
+
+    .input, .select{
+      width:100%;
+      border:2px solid var(--line);
+      border-radius:var(--radius-field);
+      padding:17px 18px;
+      font-size:17px;
+      font-weight:700;
+      background:#fff;
+      outline:none;
+    }
+
+    .input:focus, .select:focus{
+      border-color:#9a9a9a;
+    }
+
+    .button{
+      width:100%;
+      border:none;
+      border-radius:22px;
+      padding:18px 20px;
+      background:var(--accent);
+      color:#fff;
+      font-size:20px;
+      font-weight:800;
+      cursor:pointer;
+      margin-top:6px;
+    }
+
+    .button:hover{
+      opacity:0.96;
+    }
+
+    .note{
+      margin:14px 2px 0;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.45;
+    }
+
+    .warning{
+      display:none;
+      margin-top:16px;
+      padding:12px 14px;
+      border-radius:16px;
+      background:var(--warn-bg);
+      border:1px solid var(--warn-border);
+      color:var(--warn-text);
+      font-size:14px;
+      line-height:1.4;
+    }
+
+    .hero-results{
+      margin-top:18px;
+      display:grid;
+      grid-template-columns:1fr;
+      gap:12px;
+    }
+
+    .hero-card{
+      background:#000;
+      color:#fff;
+      border-radius:24px;
+      padding:18px 18px 16px;
+    }
+
+    .hero-label{
+      font-size:13px;
+      opacity:0.8;
+      margin-bottom:6px;
+      font-weight:700;
+    }
+
+    .hero-value{
+      font-size:28px;
+      line-height:1.15;
+      font-weight:800;
+      word-break:break-word;
+    }
+
+    .section-title{
+      margin:22px 2px 10px;
+      font-size:16px;
+      font-weight:800;
+    }
+
+    .results{
+      border:1px solid #ececec;
+      border-radius:22px;
+      overflow:hidden;
+      background:#fafafa;
+    }
+
+    .row{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      padding:13px 15px;
+      border-bottom:1px solid #ececec;
+      align-items:flex-start;
+    }
+
+    .row:last-child{
+      border-bottom:none;
+    }
+
+    .k{
+      font-size:14px;
+      font-weight:700;
+      color:#444;
+    }
+
+    .v{
+      font-size:15px;
+      font-weight:800;
+      text-align:right;
+    }
+
+    .muted{
+      color:var(--muted);
+      font-size:12px;
+      margin-top:6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <p class="intro">Провери колко ще струва <strong>застраховката</strong>.</p>
+
+    <div class="card">
+      <h1>Калкулатор Застраховка</h1>
+
+      <div class="field">
+        <label class="label" for="company">Компания</label>
+        <select id="company" class="select">
+          <option value="asset">Ассет</option>
+          <option value="levins">Лев Инс</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label class="label" for="sumInsured">Застрахователна сума (€)</label>
+        <input id="sumInsured" class="input" type="number" min="0" step="0.01" placeholder="Например 10000">
+      </div>
+
+      <div class="field">
+        <label class="label" for="carYear">Година на автомобила</label>
+        <input id="carYear" class="input" type="number" min="1900" max="2100" step="1" placeholder="Например 2020">
+      </div>
+
+      <div class="field">
+        <label class="label" for="discountPercent">Отстъпка (%)</label>
+        <input id="discountPercent" class="input" type="number" min="0" step="0.01" placeholder="Например 10">
+        <div class="muted">Отстъпката е процент от премията без данък.</div>
+      </div>
+
+      <button class="button" onclick="calculateInsurance()">Изчисли Премия</button>
+
+      <div id="warning" class="warning"></div>
+
+      <div class="hero-results">
+        <div class="hero-card">
+          <div class="hero-label" id="outClientLabel">Крайна Премия</div>
+          <div class="hero-value" id="outFinalPremium">-</div>
+        </div>
+        <div class="hero-card">
+          <div class="hero-label">Възраст на Автомобила</div>
+          <div class="hero-value" id="outAge">-</div>
+        </div>
+      </div>
+
+      <div class="section-title">Детайли</div>
+
+      <div class="results">
+        <div class="row"><div class="k">Тарифна група</div><div class="v" id="outBand">-</div></div>
+        <div class="row"><div class="k">Тарифа</div><div class="v" id="outRate">-</div></div>
+        <div class="row"><div class="k">Премия без данък</div><div class="v" id="outBasePremium">-</div></div>
+        <div class="row"><div class="k">Отстъпка</div><div class="v" id="outDiscount">-</div></div>
+        <div class="row"><div class="k">Премия след отстъпка</div><div class="v" id="outNetPremium">-</div></div>
+        <div class="row"><div class="k">Премия с данък</div><div class="v" id="outPremiumWithTax">-</div></div>
+        <div class="row"><div class="k">Данък 2%</div><div class="v" id="outTax">-</div></div>
+        <div class="row"><div class="k">Комисионна</div><div class="v" id="outCommission">-</div></div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    const TAX_RATE = 0.02;
+    const ASSET_COMMISSION_RATE = 0.22;
+
+    const assetTariffs = [
+      { maxAge: 5, rate: 0.055, label: "До 5 години" },
+      { maxAge: 8, rate: 0.062, label: "До 8 години" },
+      { maxAge: 11, rate: 0.067, label: "До 11 години" },
+      { maxAge: Infinity, rate: 0.076, label: "Над 11 години" }
+    ];
+
+    function formatCurrency(value) {
+      return Number(value).toLocaleString("bg-BG", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }) + " €";
+    }
+
+    function formatPercent(value) {
+      return (value * 100).toFixed(2) + "%";
+    }
+
+    function setOutput(id, value) {
+      document.getElementById(id).textContent = value;
+    }
+
+    function showWarning(message) {
+      const box = document.getElementById("warning");
+      box.textContent = message;
+      box.style.display = "block";
+    }
+
+    function hideWarning() {
+      const box = document.getElementById("warning");
+      box.textContent = "";
+      box.style.display = "none";
+    }
+
+    function getTariff(company, age) {
+      if (company !== "asset") return null;
+      return assetTariffs.find(t => age <= t.maxAge) || null;
+    }
+
+    function resetResults() {
+      [
+        "outAge","outBand","outRate","outBasePremium","outDiscount",
+        "outNetPremium","outPremiumWithTax","outTax","outFinalPremium","outCommission"
+      ].forEach(id => setOutput(id, "-"));
+      setOutput("outClientLabel", "Крайна Премия");
+    }
+
+    function calculateInsurance() {
+      hideWarning();
+
+      const company = document.getElementById("company").value;
+      const sumInsured = Number(document.getElementById("sumInsured").value);
+      const carYear = Number(document.getElementById("carYear").value);
+      const discountPercent = Number(document.getElementById("discountPercent").value || 0);
+      const currentYear = new Date().getFullYear();
+
+      if (!sumInsured || sumInsured <= 0) {
+        resetResults();
+        showWarning("Моля въведи валидна застрахователна сума.");
+        return;
+      }
+
+      if (!carYear || carYear < 1900 || carYear > currentYear) {
+        resetResults();
+        showWarning("Моля въведи валидна година на автомобила.");
+        return;
+      }
+
+      if (discountPercent < 0 || discountPercent > 100) {
+        resetResults();
+        showWarning("Отстъпката трябва да е между 0% и 100%.");
+        return;
+      }
+
+      const age = currentYear - carYear;
+      setOutput("outAge", age + " г.");
+
+      const tariff = getTariff(company, age);
+
+      if (!tariff) {
+        setOutput("outBand", "-");
+        setOutput("outRate", "-");
+        setOutput("outBasePremium", "-");
+        setOutput("outDiscount", "-");
+        setOutput("outNetPremium", "-");
+        setOutput("outPremiumWithTax", "-");
+        setOutput("outTax", "-");
+        setOutput("outFinalPremium", "-");
+        setOutput("outCommission", "-");
+        setOutput("outClientLabel", discountPercent > 0 ? "Премия Клиент" : "Крайна Премия");
+        showWarning("За Лев Инс още няма въведени тарифни числа.");
+        return;
+      }
+
+      const basePremium = sumInsured * tariff.rate;
+      const discountAmount = basePremium * (discountPercent / 100);
+      const netPremium = basePremium - discountAmount;
+      const tax = netPremium * TAX_RATE;
+      const premiumWithTax = netPremium + tax;
+      const commission = company === "asset" ? netPremium * ASSET_COMMISSION_RATE : 0;
+
+      setOutput("outClientLabel", discountPercent > 0 ? "Премия Клиент" : "Крайна Премия");
+      setOutput("outBand", tariff.label);
+      setOutput("outRate", formatPercent(tariff.rate));
+      setOutput("outBasePremium", formatCurrency(basePremium));
+      setOutput("outDiscount", formatCurrency(discountAmount) + " (" + discountPercent.toFixed(2) + "%)");
+      setOutput("outNetPremium", formatCurrency(netPremium));
+      setOutput("outPremiumWithTax", formatCurrency(premiumWithTax));
+      setOutput("outTax", formatCurrency(tax));
+      setOutput("outFinalPremium", formatCurrency(premiumWithTax));
+      setOutput("outCommission", formatCurrency(commission));
+    }
+  </script>
+</body>
+</html>
