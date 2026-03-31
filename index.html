@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Застраховки Калкулатор</title>
+  <title> Застраховки Калкулатор </title>
   <style>
     :root{
       --bg:#f3f3f3;
@@ -199,7 +199,7 @@
       <div class="field">
         <label class="label" for="company">Компания</label>
         <select id="company" class="select">
-          <option value="asset">Асет</option>
+          <option value="asset">Ассет</option>
           <option value="levins">Лев Инс</option>
         </select>
       </div>
@@ -243,6 +243,8 @@
         <div class="row"><div class="k">Премия без данък</div><div class="v" id="outBasePremium">-</div></div>
         <div class="row"><div class="k">Отстъпка</div><div class="v" id="outDiscount">-</div></div>
         <div class="row"><div class="k">Премия след отстъпка</div><div class="v" id="outNetPremium">-</div></div>
+        <div class="row"><div class="k">Доверен сервиз</div><div class="v" id="outTrustedService">-</div></div>
+        <div class="row"><div class="k">С доверен сервиз</div><div class="v" id="outPremiumTrustedNoTax">-</div></div>
         <div class="row"><div class="k">Премия с данък</div><div class="v" id="outPremiumWithTax">-</div></div>
         <div class="row"><div class="k">Данък 2%</div><div class="v" id="outTax">-</div></div>
         <div class="row"><div class="k">Комисионна</div><div class="v" id="outCommission">-</div></div>
@@ -297,7 +299,8 @@
     function resetResults() {
       [
         "outAge","outBand","outRate","outBasePremium","outDiscount",
-        "outNetPremium","outPremiumWithTax","outTax","outFinalPremium","outCommission"
+        "outNetPremium","outTrustedService","outPremiumTrustedNoTax",
+        "outPremiumWithTax","outTax","outFinalPremium","outCommission"
       ].forEach(id => setOutput(id, "-"));
       setOutput("outClientLabel", "Крайна Премия");
     }
@@ -335,16 +338,7 @@
       const tariff = getTariff(company, age);
 
       if (!tariff) {
-        setOutput("outBand", "-");
-        setOutput("outRate", "-");
-        setOutput("outBasePremium", "-");
-        setOutput("outDiscount", "-");
-        setOutput("outNetPremium", "-");
-        setOutput("outPremiumWithTax", "-");
-        setOutput("outTax", "-");
-        setOutput("outFinalPremium", "-");
-        setOutput("outCommission", "-");
-        setOutput("outClientLabel", discountPercent > 0 ? "Премия Клиент" : "Крайна Премия");
+        resetResults();
         showWarning("За Лев Инс още няма въведени тарифни числа.");
         return;
       }
@@ -352,9 +346,26 @@
       const basePremium = sumInsured * tariff.rate;
       const discountAmount = basePremium * (discountPercent / 100);
       const netPremium = basePremium - discountAmount;
-      const tax = netPremium * TAX_RATE;
-      const premiumWithTax = netPremium + tax;
-      const commission = company === "asset" ? netPremium * ASSET_COMMISSION_RATE : 0;
+
+      let trustedServiceAmount = 0;
+      let premiumTrustedNoTax = basePremium;
+      let premiumBeforeTax = netPremium;
+
+      if (company === "asset" && tariff.label === "Над 11 години") {
+        trustedServiceAmount = netPremium * 0.20;
+        premiumTrustedNoTax = basePremium + trustedServiceAmount;
+        premiumBeforeTax = netPremium + trustedServiceAmount;
+      } else {
+        premiumTrustedNoTax = basePremium;
+        premiumBeforeTax = netPremium;
+      }
+
+      const tax = premiumBeforeTax * TAX_RATE;
+      const premiumWithTax = premiumBeforeTax + tax;
+
+      const commission = company === "asset"
+        ? ((tariff.label === "Над 11 години" ? premiumBeforeTax : netPremium) * ASSET_COMMISSION_RATE)
+        : 0;
 
       setOutput("outClientLabel", discountPercent > 0 ? "Премия Клиент" : "Крайна Премия");
       setOutput("outBand", tariff.label);
@@ -362,8 +373,10 @@
       setOutput("outBasePremium", formatCurrency(basePremium));
       setOutput("outDiscount", formatCurrency(discountAmount) + " (" + discountPercent.toFixed(2) + "%)");
       setOutput("outNetPremium", formatCurrency(netPremium));
-      setOutput("outPremiumWithTax", formatCurrency(premiumWithTax));
+      setOutput("outTrustedService", formatCurrency(trustedServiceAmount));
+      setOutput("outPremiumTrustedNoTax", formatCurrency(premiumTrustedNoTax));
       setOutput("outTax", formatCurrency(tax));
+      setOutput("outPremiumWithTax", formatCurrency(premiumWithTax));
       setOutput("outFinalPremium", formatCurrency(premiumWithTax));
       setOutput("outCommission", formatCurrency(commission));
     }
